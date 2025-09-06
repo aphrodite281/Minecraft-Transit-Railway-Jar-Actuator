@@ -57,24 +57,31 @@ jobs:
           with:
             name: Fabric and Forge ${{ matrix.minecraft }}
             path: build/release
-        - name: Upload pages artifact
-          uses: actions/upload-pages-artifact@v3
-          with:
-            path: build/release
         - name: Post Crowdin translation analysis
           if: ${{ matrix.minecraft == '1.20.4' }}
           run: cat build/translation/analysis.md >> $GITHUB_STEP_SUMMARY
           continue-on-error: true
-  deploy:
+  deploy-libraries:
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      id-token: write 
     steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Verify artifacts
+        run: ls -lahR artifacts
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
